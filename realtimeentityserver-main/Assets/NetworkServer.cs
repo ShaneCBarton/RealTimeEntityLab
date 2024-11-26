@@ -13,7 +13,7 @@ public class NetworkServer : MonoBehaviour
     NetworkPipeline nonReliableNotInOrderedPipeline;
     const ushort NetworkPort = 9001;
     const int MaxNumberOfClientConnections = 1000;
-    Dictionary<int, NetworkConnection> idToConnectionLookup;
+    public Dictionary<int, NetworkConnection> idToConnectionLookup;
     Dictionary<NetworkConnection, int> connectionToIDLookup;
 
     void Start()
