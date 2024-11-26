@@ -9,6 +9,21 @@ public class GameLogic : MonoBehaviour
     private float durationUntilNextBalloon = 2f;
     private NetworkServer networkServer;
     private System.Random randomGenerator;
+    private Dictionary<string, BalloonData> activeBalloons = new Dictionary<string, BalloonData>();
+
+    private struct BalloonData
+    {
+        public float xPercent;
+        public float yPercent;
+        public string balloonKey;
+
+        public BalloonData(float x, float y)
+        {
+            xPercent = x;
+            yPercent = y;
+            balloonKey = $"{x:F4},{y:F4}";
+        }
+    }
 
     void Start()
     {
@@ -36,6 +51,9 @@ public class GameLogic : MonoBehaviour
         float screenPositionXPercent = (float)randomGenerator.NextDouble();
         float screenPositionYPercent = (float)randomGenerator.NextDouble();
 
+        BalloonData newBalloon = new BalloonData(screenPositionXPercent, screenPositionYPercent);
+        activeBalloons[newBalloon.balloonKey] = newBalloon;
+
         string spawnMessage = string.Format("{0},{1},{2}",
             ServerToClientSignifiers.SPAWN_BALLOON,
             screenPositionXPercent.ToString("F4"),
@@ -43,14 +61,29 @@ public class GameLogic : MonoBehaviour
 
         foreach (KeyValuePair<int, NetworkConnection> clientConnection in networkServer.idToConnectionLookup)
         {
-            NetworkServerProcessing.SendMessageToClient(
-                spawnMessage,
-                clientConnection.Key,
-                TransportPipeline.ReliableAndInOrder
-            );
+            NetworkServerProcessing.SendMessageToClient(spawnMessage, clientConnection.Key, TransportPipeline.ReliableAndInOrder);
         }
+    }
 
-        Debug.Log($"Spawned balloon at {screenPositionXPercent:F4}, {screenPositionYPercent:F4}");
+    public void SendExistingBalloonsToClient(int clientID)
+    {
+        foreach (BalloonData balloon in activeBalloons.Values)
+        {
+            string spawnMessage = string.Format("{0},{1},{2}",
+                ServerToClientSignifiers.SPAWN_BALLOON,
+                balloon.xPercent.ToString("F4"),
+                balloon.yPercent.ToString("F4"));
+
+            NetworkServerProcessing.SendMessageToClient(spawnMessage, clientID, TransportPipeline.ReliableAndInOrder);
+        }
+    }
+
+    public void HandleBalloonPopped(string balloonKey)
+    {
+        if (activeBalloons.ContainsKey(balloonKey))
+        {
+            activeBalloons.Remove(balloonKey);
+        }
     }
 
     void Update()

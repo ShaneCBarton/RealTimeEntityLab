@@ -9,23 +9,22 @@ static public class NetworkServerProcessing
     #region Send and Receive Data Functions
     static public void ReceivedMessageFromClient(string msg, int clientConnectionID, TransportPipeline pipeline)
     {
-        Debug.Log("Network msg received =  " + msg + ", from connection id = " + clientConnectionID + ", from pipeline = " + pipeline);
-
         string[] csv = msg.Split(',');
         int signifier = int.Parse(csv[0]);
 
         if (signifier == ClientToServerSignifiers.BALLOON_POPPED)
         {
-            string popMessage = ServerToClientSignifiers.BALLOON_POPPED + "," + csv[1] + "," + csv[2];
+            string balloonKey = $"{csv[1]},{csv[2]}";
+            gameLogic.HandleBalloonPopped(balloonKey);
 
+            string popMessage = ServerToClientSignifiers.BALLOON_POPPED + "," + csv[1] + "," + csv[2];
             foreach (KeyValuePair<int, NetworkConnection> client in networkServer.idToConnectionLookup)
             {
                 SendMessageToClient(popMessage, client.Key, TransportPipeline.ReliableAndInOrder);
             }
-
-            Debug.Log($"Server received pop from client {clientConnectionID}, broadcasting to all clients");
         }
     }
+
     static public void SendMessageToClient(string msg, int clientConnectionID, TransportPipeline pipeline)
     {
         networkServer.SendMessageToClient(msg, clientConnectionID, pipeline);
@@ -39,6 +38,7 @@ static public class NetworkServerProcessing
     {
         Debug.Log($"Server: New client connected with ID {clientConnectionID}");
         Debug.Log($"Total connected clients: {networkServer.idToConnectionLookup.Count}");
+        gameLogic.SendExistingBalloonsToClient(clientConnectionID);
     }
     static public void DisconnectionEvent(int clientConnectionID)
     {
