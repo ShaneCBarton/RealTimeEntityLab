@@ -8,22 +8,22 @@ static public class NetworkClientProcessing
     #region Send and Receive Data Functions
     static public void ReceivedMessageFromServer(string msg, TransportPipeline pipeline)
     {
-        Debug.Log("Network msg received =  " + msg + ", from pipeline = " + pipeline);
-
+        Debug.Log("Network msg received = " + msg + ", from pipeline = " + pipeline);
         string[] csv = msg.Split(',');
         int signifier = int.Parse(csv[0]);
 
-        // if (signifier == ServerToClientSignifiers.asd)
-        // {
-
-        // }
-        // else if (signifier == ServerToClientSignifiers.asd)
-        // {
-
-        // }
-
-        //gameLogic.DoSomething();
-
+        if (signifier == ServerToClientSignifiers.SPAWN_BALLOON)
+        {
+            float xPercent = float.Parse(csv[1]);
+            float yPercent = float.Parse(csv[2]);
+            gameLogic.SpawnNewBalloon(xPercent, yPercent);
+        }
+        else if (signifier == ServerToClientSignifiers.BALLOON_POPPED)
+        {
+            float xPercent = float.Parse(csv[1]);
+            float yPercent = float.Parse(csv[2]);
+            gameLogic.HandleBalloonPopped(xPercent, yPercent);
+        }
     }
 
     static public void SendMessageToServer(string msg, TransportPipeline pipeline)
@@ -36,11 +36,12 @@ static public class NetworkClientProcessing
     #region Connection Related Functions and Events
     static public void ConnectionEvent()
     {
-        Debug.Log("Network Connection Event!");
+        Debug.Log("Client: Successfully connected to server!");
     }
+
     static public void DisconnectionEvent()
     {
-        Debug.Log("Network Disconnection Event!");
+        Debug.Log("Client: Disconnected from server");
     }
     static public bool IsConnectedToServer()
     {
@@ -87,7 +88,7 @@ static public class ClientToServerSignifiers
 static public class ServerToClientSignifiers
 {
     public const int SPAWN_BALLOON = 1;
-    public const int BALOON_POPPED = 2;
+    public const int BALLOON_POPPED = 2;
 }
 #endregion
 

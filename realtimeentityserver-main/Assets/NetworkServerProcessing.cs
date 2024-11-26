@@ -35,11 +35,13 @@ static public class NetworkServerProcessing
 
     static public void ConnectionEvent(int clientConnectionID)
     {
-        Debug.Log("Client connection, ID == " + clientConnectionID);
+        Debug.Log($"Server: New client connected with ID {clientConnectionID}");
+        Debug.Log($"Total connected clients: {networkServer.idToConnectionLookup.Count}");
     }
     static public void DisconnectionEvent(int clientConnectionID)
     {
-        Debug.Log("Client disconnection, ID == " + clientConnectionID);
+        Debug.Log($"Server: Client {clientConnectionID} disconnected");
+        Debug.Log($"Remaining connected clients: {networkServer.idToConnectionLookup.Count}");
     }
 
     #endregion

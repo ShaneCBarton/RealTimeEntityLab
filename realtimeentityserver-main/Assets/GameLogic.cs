@@ -1,11 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Networking.Transport;
 using UnityEngine;
 
 public class GameLogic : MonoBehaviour
 {
-    private float durationUntilNextBalloon = 1f;
+    private float durationUntilNextBalloon = 2f;
     private NetworkServer networkServer;
     private System.Random randomGenerator;
 
@@ -54,8 +55,11 @@ public class GameLogic : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.A))
-            NetworkServerProcessing.SendMessageToClient("2,Hello client's world, sincerely your network server", 0, TransportPipeline.ReliableAndInOrder);
+        if (Input.GetKeyDown(KeyCode.A) && networkServer.idToConnectionLookup.Count > 0)
+        {
+            int firstClientID = networkServer.idToConnectionLookup.Keys.First();
+            NetworkServerProcessing.SendMessageToClient("2,Hello client's world, sincerely your network server", firstClientID, TransportPipeline.ReliableAndInOrder);
+        }
     }
 
 }
