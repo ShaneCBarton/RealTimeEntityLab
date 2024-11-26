@@ -13,7 +13,7 @@ static public class NetworkServerProcessing
         string[] csv = msg.Split(',');
         int signifier = int.Parse(csv[0]);
 
-        if (signifier == ClientToServerSignifiers.asd)
+        //if (signifier == ClientToServerSignifiers.asd)
         {
 
         }
@@ -67,12 +67,13 @@ static public class NetworkServerProcessing
 #region Protocol Signifiers
 static public class ClientToServerSignifiers
 {
-    public const int asd = 1;
+    public const int BALLOON_POPPED = 1;
 }
 
 static public class ServerToClientSignifiers
 {
-    public const int asd = 1;
+    public const int SPAWN_BALLOON = 1;
+    public const int BALLOON_POPPED = 2;
 }
 
 #endregion
