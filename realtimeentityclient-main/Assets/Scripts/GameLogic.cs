@@ -44,7 +44,7 @@ public class GameLogic : MonoBehaviour
         {
             Destroy(balloon);
             activeBalloons.Remove(balloonKey);
-            Debug.Log($"Balloon popped at {balloonKey}");
+            Debug.Log($"Balloon popped and removed at position {balloonKey}");
         }
     }
 }

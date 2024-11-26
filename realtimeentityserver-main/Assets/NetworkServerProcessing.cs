@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Networking.Transport;
 using UnityEngine;
 
 static public class NetworkServerProcessing
@@ -13,16 +14,17 @@ static public class NetworkServerProcessing
         string[] csv = msg.Split(',');
         int signifier = int.Parse(csv[0]);
 
-        //if (signifier == ClientToServerSignifiers.asd)
+        if (signifier == ClientToServerSignifiers.BALLOON_POPPED)
         {
+            string popMessage = ServerToClientSignifiers.BALLOON_POPPED + "," + csv[1] + "," + csv[2];
 
+            foreach (KeyValuePair<int, NetworkConnection> client in networkServer.idToConnectionLookup)
+            {
+                SendMessageToClient(popMessage, client.Key, TransportPipeline.ReliableAndInOrder);
+            }
+
+            Debug.Log($"Server received pop from client {clientConnectionID}, broadcasting to all clients");
         }
-        // else if (signifier == ClientToServerSignifiers.asd)
-        // {
-
-        // }
-
-        //gameLogic.DoSomething();
     }
     static public void SendMessageToClient(string msg, int clientConnectionID, TransportPipeline pipeline)
     {

@@ -1,18 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class CircleClick : MonoBehaviour
 {
-    void Start()
-    {
-        
-    }
-    void Update()
-    {
-        
-    }
     void OnMouseDown()
     {
         Vector3 worldPos = transform.position;
@@ -27,5 +16,7 @@ public class CircleClick : MonoBehaviour
             yPercent.ToString("F4"));
 
         NetworkClientProcessing.SendMessageToServer(popMessage, TransportPipeline.ReliableAndInOrder);
+
+        Debug.Log("Balloon pop requested at position: " + xPercent + ", " + yPercent);
     }
 }
