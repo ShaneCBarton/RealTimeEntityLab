@@ -30,6 +30,18 @@ static public class NetworkServerProcessing
         networkServer.SendMessageToClient(msg, clientConnectionID, pipeline);
     }
 
+    static public void SendBalloonSpawnToClient(float xPercent, float yPercent, float velocityX, float velocityY, int clientID)
+    {
+        string spawnMessage = string.Format("{0},{1},{2},{3},{4}",
+            ServerToClientSignifiers.SPAWN_BALLOON,
+            xPercent.ToString("F4"),
+            yPercent.ToString("F4"),
+            velocityX.ToString("F4"),
+            velocityY.ToString("F4"));
+
+        SendMessageToClient(spawnMessage, clientID, TransportPipeline.ReliableAndInOrder);
+    }
+
     #endregion
 
     #region Connection Events
@@ -79,6 +91,7 @@ static public class ServerToClientSignifiers
 {
     public const int SPAWN_BALLOON = 1;
     public const int BALLOON_POPPED = 2;
+    public const int UPDATE_BALLOON_POSITION = 3;
 }
 
 #endregion

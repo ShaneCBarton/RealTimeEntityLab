@@ -15,12 +15,16 @@ public class GameLogic : MonoBehaviour
     {
         public float xPercent;
         public float yPercent;
+        public float velocityX;
+        public float velocityY;
         public string balloonKey;
 
-        public BalloonData(float x, float y)
+        public BalloonData(float x, float y, float vx, float vy)
         {
             xPercent = x;
             yPercent = y;
+            velocityX = vx;
+            velocityY = vy;
             balloonKey = $"{x:F4},{y:F4}";
         }
     }
@@ -32,6 +36,47 @@ public class GameLogic : MonoBehaviour
         randomGenerator = new System.Random();
 
         StartCoroutine(CheckForClientsAndSpawnBalloons());
+        StartCoroutine(UpdateBalloonPositions());
+    }
+
+    private IEnumerator UpdateBalloonPositions()
+    {
+        while (true)
+        {
+            if (networkServer.idToConnectionLookup.Count > 0)
+            {
+                List<string> keysToUpdate = new List<string>(activeBalloons.Keys);
+                foreach (string key in keysToUpdate)
+                {
+                    BalloonData balloon = activeBalloons[key];
+
+                    balloon.xPercent += balloon.velocityX * Time.deltaTime;
+                    balloon.yPercent += balloon.velocityY * Time.deltaTime;
+
+                    if (balloon.xPercent < 0 || balloon.xPercent > 1) balloon.velocityX *= -1;
+                    if (balloon.yPercent < 0 || balloon.yPercent > 1) balloon.velocityY *= -1;
+
+                    balloon.xPercent = Mathf.Clamp01(balloon.xPercent);
+                    balloon.yPercent = Mathf.Clamp01(balloon.yPercent);
+
+                    string newKey = $"{balloon.xPercent:F4},{balloon.yPercent:F4}";
+                    activeBalloons.Remove(key);
+                    balloon.balloonKey = newKey;
+                    activeBalloons[newKey] = balloon;
+
+                    string updateMessage = string.Format("{0},{1},{2}",
+                        ServerToClientSignifiers.UPDATE_BALLOON_POSITION,
+                        key,
+                        newKey);
+
+                    foreach (KeyValuePair<int, NetworkConnection> clientConnection in networkServer.idToConnectionLookup)
+                    {
+                        NetworkServerProcessing.SendMessageToClient(updateMessage, clientConnection.Key, TransportPipeline.ReliableAndInOrder);
+                    }
+                }
+            }
+            yield return new WaitForSeconds(0.05f);
+        }
     }
 
     private IEnumerator CheckForClientsAndSpawnBalloons()
@@ -51,17 +96,32 @@ public class GameLogic : MonoBehaviour
         float screenPositionXPercent = (float)randomGenerator.NextDouble();
         float screenPositionYPercent = (float)randomGenerator.NextDouble();
 
-        BalloonData newBalloon = new BalloonData(screenPositionXPercent, screenPositionYPercent);
+        float velocityX = ((float)randomGenerator.NextDouble() * 0.4f - 0.2f);
+        float velocityY = ((float)randomGenerator.NextDouble() * 0.4f - 0.2f);
+
+        BalloonData newBalloon = new BalloonData(screenPositionXPercent, screenPositionYPercent, velocityX, velocityY);
         activeBalloons[newBalloon.balloonKey] = newBalloon;
 
-        string spawnMessage = string.Format("{0},{1},{2}",
+        string spawnMessage = string.Format("{0},{1},{2},{3},{4}",
             ServerToClientSignifiers.SPAWN_BALLOON,
             screenPositionXPercent.ToString("F4"),
-            screenPositionYPercent.ToString("F4"));
+            screenPositionYPercent.ToString("F4"),
+            velocityX.ToString("F4"),
+            velocityY.ToString("F4"));
 
         foreach (KeyValuePair<int, NetworkConnection> clientConnection in networkServer.idToConnectionLookup)
         {
             NetworkServerProcessing.SendMessageToClient(spawnMessage, clientConnection.Key, TransportPipeline.ReliableAndInOrder);
+        }
+
+        foreach (KeyValuePair<int, NetworkConnection> clientConnection in networkServer.idToConnectionLookup)
+        {
+            NetworkServerProcessing.SendBalloonSpawnToClient(
+                screenPositionXPercent,
+                screenPositionYPercent,
+                velocityX,
+                velocityY,
+                clientConnection.Key);
         }
     }
 

@@ -4,7 +4,6 @@ using UnityEngine;
 
 static public class NetworkClientProcessing
 {
-
     #region Send and Receive Data Functions
     static public void ReceivedMessageFromServer(string msg, TransportPipeline pipeline)
     {
@@ -16,13 +15,21 @@ static public class NetworkClientProcessing
         {
             float xPercent = float.Parse(csv[1]);
             float yPercent = float.Parse(csv[2]);
-            gameLogic.SpawnNewBalloon(xPercent, yPercent);
+            float velocityX = float.Parse(csv[3]);
+            float velocityY = float.Parse(csv[4]);
+            gameLogic.SpawnNewBalloon(xPercent, yPercent, velocityX, velocityY);
         }
         else if (signifier == ServerToClientSignifiers.BALLOON_POPPED)
         {
             float xPercent = float.Parse(csv[1]);
             float yPercent = float.Parse(csv[2]);
             gameLogic.HandleBalloonPopped(xPercent, yPercent);
+        }
+        else if (signifier == ServerToClientSignifiers.UPDATE_BALLOON_POSITION)
+        {
+            string oldKey = csv[1];
+            string newKey = csv[2];
+            gameLogic.UpdateBalloonPosition(oldKey, newKey);
         }
     }
 
@@ -89,6 +96,7 @@ static public class ServerToClientSignifiers
 {
     public const int SPAWN_BALLOON = 1;
     public const int BALLOON_POPPED = 2;
+    public const int UPDATE_BALLOON_POSITION = 3;
 }
 #endregion
 
